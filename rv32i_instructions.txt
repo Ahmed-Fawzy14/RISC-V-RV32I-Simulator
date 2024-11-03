@@ -1,0 +1,42 @@
+LUI,x1,,,0x12345
+AUIPC,x2,,,0x67890
+JAL,x3,,label1
+JALR,x4,x1,,0
+BEQ,x5,x6,,0x20
+BNE,x7,x8,,0x30
+BLT,x9,x10,,0x40
+BGE,x11,x12,,0x50
+BLTU,x13,x14,,0x60
+BGEU,x15,x16,,0x70
+LB,x17,x18,,0x80
+LH,x19,x20,,0x90
+LW,x21,x22,,0xA0
+LBU,x23,x24,,0xB0
+LHU,x25,x26,,0xC0
+SB,x27,x28,,0xD0
+SH,x29,x30,,0xE0
+SW,x31,x1,,0xF0
+ADDI,x1,x2,,10
+SLTI,x3,x4,,20
+SLTIU,x5,x6,,30
+XORI,x7,x8,,40
+ORI,x9,x10,,50
+ANDI,x11,x12,,60
+SLLI,x13,x14,,0
+SRLI,x15,x16,,0
+SRAI,x17,x18,,0
+ADD,x19,x20,x21,
+SUB,x22,x23,x24,
+SLL,x25,x26,x27,
+SLT,x28,x29,x30,
+SLTU,x31,x1,x2,
+XOR,x3,x4,x5,
+SRL,x6,x7,x8,
+SRA,x9,x10,x11,
+OR,x12,x13,x14,
+AND,x15,x16,x17,
+FENCE,,,, # Halting instruction
+FENCE.TSO,,,, # Halting instruction
+PAUSE,,,, # Halting instruction
+ECALL,,,, # Halting instruction
+EBREAK,,,, # Halting instruction
