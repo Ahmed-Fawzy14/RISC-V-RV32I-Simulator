@@ -12,55 +12,71 @@ memory = {}
 def add(rd, rs1, rs2):
     if rd != 0:
         registers[rd] = registers[rs1] + registers[rs2]
+    printRegisters()
 def sub(rd, rs1, rs2):
     if rd != 0:
         registers[rd] = registers[rs1] - registers[rs2]
+    printRegisters()
 def addi(rd, rs1, imm):
     if rd != 0:
         registers[rd] = registers[rs1] + imm
+    printRegisters()
 def andi(rd, rs1, imm):
     if rd != 0:
         registers[rd] = registers[rs1] & imm
+    printRegisters()
 def ori(rd, rs1, imm):
     if rd != 0:
         registers[rd] = registers[rs1] | imm
+    printRegisters()
 def xori(rd, rs1, imm):
     if rd != 0:
         registers[rd] = registers[rs1] ^ imm
+    printRegisters()
 #------------shifting operations---------------
 def slli(rd, rs1, shamt):
     if rd != 0:
         registers[rd] = registers[rs1] << shamt
+    printRegisters()
 def srli(rd, rs1, shamt):
     if rd != 0:
         registers[rd] = registers[rs1] >> shamt
+    printRegisters()
 def srai(rd, rs1, shamt):
     if rd != 0:
         registers[rd] = (registers[rs1] >> shamt) | (-(registers[rs1] < 0) << (32 - shamt))
+    printRegisters()
 # ----------------Loading and storing operations------------
 def lw(address, rd):
     registers[rd] = memory.get(address, 0)
+    printRegisters()
 def sw(rs1, address):
     memory[address] = registers[rs1]
+    printRegisters()
 # -----------------Immediate instructions--------------
 def lui(rd, imm):
     registers[rd] = imm << 12
+    printRegisters()
 def auipc(rd, imm):
     registers[rd] = (program_counter + (imm << 12))
+    printRegisters()
 # -----------Branch instructions-----------
 def beq(rs1, rs2, imm):
     global program_counter
     if registers[rs1] == registers[rs2]:
         program_counter += imm - 1
+    printRegisters()
 def bne(rs1, rs2, imm):
     global program_counter
     if registers[rs1] != registers[rs2]:
         program_counter += imm - 1
+    printRegisters()
 
 def blt(rs1, rs2, imm):
     global program_counter
     if registers[rs1] < registers[rs2]:
         program_counter += imm - 1
+    printRegisters()
 
 #------------------Halting instructions-------------
 def ecall():
@@ -123,9 +139,19 @@ def instruction_splitting(line):
     imm = parts[4].strip() if len(parts) > 4 and parts[4].strip() != "" else None #4th field
     return opcode, rd, rs1, rs2, imm
 
+def printRegisters():
+    # Print registers in decimal format
+    print("Register values in decimal:", " ".join(str(register) for register in registers))
+    
+    # Print registers in binary format
+    print("Register values in binary:", " ".join(bin(register) for register in registers))
+    
+    # Print registers in hexadecimal format
+    print("Register values in hexadecimal:", " ".join(hex(register) for register in registers))
+
 
 def main():
-    file_path = r"D:\Downloads\rv32i_instructions.txt"  # text file path on my pc
+    file_path = r"rv32i_instructions.txt"  # text file path on my pc
     instruction_lines = read_instructions_from_file(file_path)
 
     for line in instruction_lines:
@@ -135,3 +161,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    printRegisters()
