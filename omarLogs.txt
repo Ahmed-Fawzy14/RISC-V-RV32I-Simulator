@@ -1,3 +1,4 @@
-
-November 9
-November 12
+Oct 26 4:05pm-4:40pm The entire team met to discuss the project, generate the outline, and split up the tasks.
+November 2 1:00pm-2:00pm The entire team met to discuss the project to follow up on each other's ideas and deicde on the method of implementation.
+November 9 8:00pm-12:00am I worked on the GUI, building an initial window that allows the user to type instructions, with the required syntax shown for the user in detail.
+November 12 11:00pm-2:00am Expanded on the GUI, allowing users to intiialize the memory, select files to be their instructions if they want.
