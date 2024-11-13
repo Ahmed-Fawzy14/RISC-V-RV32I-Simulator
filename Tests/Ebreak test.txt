@@ -1,7 +1,0 @@
-# Test Case 5: Control Instructions
-ADDI, 1, 0, 42      # x1 = 42
-ECALL               # halt program
-ADDI, 2, 0, 99      # (should not be executed)
-
-# Expected Output:
-# Registers: [0, 42, 0, ...]

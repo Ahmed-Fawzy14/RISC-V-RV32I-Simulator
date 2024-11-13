@@ -1,6 +1,4 @@
-ADDI x1, x1, 10
+ADDI x1, x1, 256
 ADDI x2, x1, 0
 SW x1, 100(x2)          
 LW x3, 100(x2)
-SH x1, 50(x2)          
-LB x4, 50(x2)

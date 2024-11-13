@@ -1,0 +1,7 @@
+# Test Case 5: Control Instructions
+ADDI x1, x0, 42      # x1 = 42
+ECALL                # Halt program (using system call)
+ADDI x2, x0, 99      # This instruction should not be executed
+
+# Expected Output:
+# Registers: [0, 42, 0, ...]
