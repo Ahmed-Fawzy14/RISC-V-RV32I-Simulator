@@ -35,7 +35,7 @@ The simulator supports 42 RV32I instructions, with halting functionality for uns
 
 1. **Clone the Repository**:
     ```bash
-    git clone https://github.com/yourusername/RISC-V-RV32I-Simulator.git
+    git clone https://github.com/Ahmed-Fawzy14/RISC-V-RV32I-Simulator/tree/main.git
     cd RISC-V-RV32I-Simulator
     ```
 
