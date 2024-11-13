@@ -1,0 +1,8 @@
+main:
+    jal x1, label          # Jump to 'label', store return address in x1
+    addi x2, x0, 0         # This instruction should be skipped
+
+label:
+    addi x2, x0, 1         # Set x2 to 1
+    jalr x0, x1, 3         # Return to address in x1 + 3 = 4 (HALT)
+    EBREAK

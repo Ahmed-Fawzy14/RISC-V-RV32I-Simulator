@@ -5,6 +5,8 @@ main:
     sltu x4, x1, x2      # x4 = (x1 < x2) ? 1 : 0 (unsigned comparison)
     slti x5, x1, 0       # x5 = (x1 < 0) ? 1 : 0 (signed immediate)
     sltiu x6, x1, 0      # x6 = (x1 < 0) ? 1 : 0 (unsigned immediate)
+    FENCE
+
 # Expected Outputs:
 # x1 = 0xFFFFFFFF (-1)
 # x2 = 1

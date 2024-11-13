@@ -5,35 +5,28 @@ registers = [0] * 32
 program_counter = 0
 memory = {}
 labels = {}
-csr_registers = {}
+executable_instructions = []
 
-# Memory is handled in little-endian format
-
-# Memory Handling Functions
+# Memory Handling Helper Functions
 def store_byte(address, value):
-    """Store a single byte (8 bits) in memory."""
     memory[address] = value & 0xFF
 
 def store_halfword(address, value):
-    """Store a halfword (2 bytes) in memory."""
     store_byte(address, value & 0xFF)
     store_byte(address + 1, (value >> 8) & 0xFF)
 
 def store_word(address, value):
-    """Store a word (4 bytes) in memory."""
     store_byte(address, value & 0xFF)
     store_byte(address + 1, (value >> 8) & 0xFF)
     store_byte(address + 2, (value >> 16) & 0xFF)
     store_byte(address + 3, (value >> 24) & 0xFF)
 
 def load_byte(address):
-    """Load a single byte (8 bits) from memory."""
     if address not in memory:
         print(f"Warning: Loading from uninitialized memory address {address}. Returning 0.")
     return memory.get(address, 0)
 
 def load_halfword(address):
-    """Load a halfword (2 bytes) from memory and sign-extend."""
     byte1 = load_byte(address)
     byte2 = load_byte(address + 1)
     value = (byte2 << 8) | byte1
@@ -42,13 +35,11 @@ def load_halfword(address):
     return value
 
 def load_halfword_unsigned(address):
-    """Load a halfword (2 bytes) from memory and zero-extend."""
     byte1 = load_byte(address)
     byte2 = load_byte(address + 1)
     return (byte2 << 8) | byte1
 
 def load_word(address):
-    """Load a word (4 bytes) from memory."""
     byte1 = load_byte(address)
     byte2 = load_byte(address + 1)
     byte3 = load_byte(address + 2)
@@ -58,131 +49,138 @@ def load_word(address):
 # Arithmetic and Logical Instructions
 def add(rd, rs1, rs2):
     if rd != 0:
-        registers[rd] = registers[rs1] + registers[rs2]
+        result = (registers[rs1] + registers[rs2]) & 0xFFFFFFFF
+        registers[rd] = result
+        print(f"ADD: x{rd} = x{rs1} + x{rs2} -> {registers[rd]}")
 
 def sub(rd, rs1, rs2):
     if rd != 0:
-        registers[rd] = registers[rs1] - registers[rs2]
+        result = (registers[rs1] - registers[rs2]) & 0xFFFFFFFF
+        registers[rd] = result
+        print(f"SUB: x{rd} = x{rs1} - x{rs2} -> {registers[rd]}")
 
 def addi(rd, rs1, imm):
-    """Add immediate value to rs1 and store in rd."""
     if rd != 0:
-        if rd is not None and imm is not None:
-            registers[rd] = registers[rs1] + imm
-        else:
-            print(f"Error: ADDI instruction missing operands. rd={rd}, rs1={rs1}, imm={imm}")
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        result = (registers[rs1] + imm) & 0xFFFFFFFF
+        registers[rd] = result
+        print(f"ADDI: x{rd} = x{rs1} + {imm} -> {registers[rd]}")
 
 def andi(rd, rs1, imm):
     if rd != 0:
-        registers[rd] = registers[rs1] & imm
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        result = registers[rs1] & imm
+        registers[rd] = result
+        print(f"ANDI: x{rd} = x{rs1} & {imm} -> {registers[rd]}")
 
 def ori(rd, rs1, imm):
     if rd != 0:
-        registers[rd] = registers[rs1] | imm
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        result = registers[rs1] | imm
+        registers[rd] = result
+        print(f"ORI: x{rd} = x{rs1} | {imm} -> {registers[rd]}")
 
 def xori(rd, rs1, imm):
     if rd != 0:
-        registers[rd] = registers[rs1] ^ imm
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        result = registers[rs1] ^ imm
+        registers[rd] = result
+        print(f"XORI: x{rd} = x{rs1} ^ {imm} -> {registers[rd]}")
 
 def slt(rd, rs1, rs2):
-    """Set Less Than."""
     if rd != 0:
-        registers[rd] = 1 if registers[rs1] < registers[rs2] else 0
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        result = 1 if registers[rs1] < registers[rs2] else 0
+        registers[rd] = result
+        print(f"SLT: x{rd} = (x{rs1} < x{rs2}) -> {registers[rd]}")
 
 def slti(rd, rs1, imm):
-    """Set Less Than Immediate."""
     if rd != 0:
-        registers[rd] = 1 if registers[rs1] < imm else 0
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        result = 1 if registers[rs1] < imm else 0
+        registers[rd] = result
+        print(f"SLTI: x{rd} = (x{rs1} < {imm}) -> {registers[rd]}")
 
 def sltiu(rd, rs1, imm):
-    """Set Less Than Immediate Unsigned."""
     if rd != 0:
-        registers[rd] = 1 if (registers[rs1] & 0xFFFFFFFF) < (imm & 0xFFFFFFFF) else 0
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        result = 1 if (registers[rs1] & 0xFFFFFFFF) < (imm & 0xFFFFFFFF) else 0
+        registers[rd] = result
+        print(f"SLTIU: x{rd} = (x{rs1} < {imm} unsigned) -> {registers[rd]}")
 
 def sll(rd, rs1, rs2):
     if rd != 0:
-        registers[rd] = registers[rs1] << (registers[rs2] & 0x1F)
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        shift_amount = registers[rs2] & 0x1F
+        result = (registers[rs1] << shift_amount) & 0xFFFFFFFF
+        registers[rd] = result
+        print(f"SLL: x{rd} = x{rs1} << ({shift_amount}) -> {registers[rd]}")
 
 def srl(rd, rs1, rs2):
     if rd != 0:
-        registers[rd] = (registers[rs1] & 0xFFFFFFFF) >> (registers[rs2] & 0x1F)
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        shift_amount = registers[rs2] & 0x1F
+        result = (registers[rs1] & 0xFFFFFFFF) >> shift_amount
+        registers[rd] = result
+        print(f"SRL: x{rd} = x{rs1} >> ({shift_amount}) -> {registers[rd]}")
 
 def sra(rd, rs1, rs2):
     if rd != 0:
-        registers[rd] = registers[rs1] >> (registers[rs2] & 0x1F)
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        shift_amount = registers[rs2] & 0x1F
+        value = registers[rs1]
+        if value & 0x80000000:
+            # Arithmetic shift for negative numbers
+            result = (value >> shift_amount) | (0xFFFFFFFF << (32 - shift_amount))
+        else:
+            result = value >> shift_amount
+        result &= 0xFFFFFFFF  # Ensure 32-bit
+        registers[rd] = result
+        print(f"SRA: x{rd} = x{rs1} >>> ({shift_amount}) -> {registers[rd]}")
 
 def slli(rd, rs1, imm):
-    """Shift Left Logical Immediate."""
     if rd != 0:
-        registers[rd] = registers[rs1] << (imm & 0x1F)
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        shift_amount = imm & 0x1F
+        result = (registers[rs1] << shift_amount) & 0xFFFFFFFF
+        registers[rd] = result
+        print(f"SLLI: x{rd} = x{rs1} << {shift_amount} -> {registers[rd]}")
 
 def srli(rd, rs1, imm):
-    """Shift Right Logical Immediate (zero-fill)."""
     if rd != 0:
-        registers[rd] = (registers[rs1] & 0xFFFFFFFF) >> (imm & 0x1F)
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        shift_amount = imm & 0x1F
+        result = (registers[rs1] & 0xFFFFFFFF) >> shift_amount
+        registers[rd] = result
+        print(f"SRLI: x{rd} = x{rs1} >> {shift_amount} -> {registers[rd]}")
 
 def srai(rd, rs1, imm):
-    """Shift Right Arithmetic Immediate (sign-extend)."""
     if rd != 0:
-        registers[rd] = registers[rs1] >> (imm & 0x1F)
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        shift_amount = imm & 0x1F
+        value = registers[rs1]
+        if value & 0x80000000:
+            # Arithmetic shift for negative numbers
+            result = (value >> shift_amount) | (0xFFFFFFFF << (32 - shift_amount))
+        else:
+            result = value >> shift_amount
+        result &= 0xFFFFFFFF  # Ensure 32-bit
+        registers[rd] = result
+        print(f"SRAI: x{rd} = x{rs1} >>> {shift_amount} -> {registers[rd]}")
 
 def sltu(rd, rs1, rs2):
-    """Set Less Than Unsigned."""
     if rd != 0:
-        registers[rd] = 1 if (registers[rs1] & 0xFFFFFFFF) < (registers[rs2] & 0xFFFFFFFF) else 0
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        result = 1 if (registers[rs1] & 0xFFFFFFFF) < (registers[rs2] & 0xFFFFFFFF) else 0
+        registers[rd] = result
+        print(f"SLTU: x{rd} = (x{rs1} < x{rs2} unsigned) -> {registers[rd]}")
 
 def xor(rd, rs1, rs2):
-    """Bitwise XOR."""
     if rd != 0:
-        registers[rd] = registers[rs1] ^ registers[rs2]
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        result = registers[rs1] ^ registers[rs2]
+        registers[rd] = result
+        print(f"XOR: x{rd} = x{rs1} ^ x{rs2} -> {registers[rd]}")
 
 def or_(rd, rs1, rs2):
-    """Bitwise OR."""
     if rd != 0:
-        registers[rd] = registers[rs1] | registers[rs2]
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        result = registers[rs1] | registers[rs2]
+        registers[rd] = result
+        print(f"OR: x{rd} = x{rs1} | x{rs2} -> {registers[rd]}")
 
 def and_(rd, rs1, rs2):
-    """Bitwise AND."""
     if rd != 0:
-        registers[rd] = registers[rs1] & registers[rs2]
-    else:
-        print("Warning: Attempt to write to x0 ignored.")
+        result = registers[rs1] & registers[rs2]
+        registers[rd] = result
+        print(f"AND: x{rd} = x{rs1} & x{rs2} -> {registers[rd]}")
 
-# Branch Instructions with Labels
+# Branch Instructions 
 def beq(rs1, rs2, target_label):
-    """Branch if Equal."""
     global program_counter
     if rs1 is None or rs2 is None:
         print(f"Error: BEQ instruction missing operands rs1={rs1}, rs2={rs2}")
@@ -192,16 +190,15 @@ def beq(rs1, rs2, target_label):
         if target_label in labels:
             program_counter = labels[target_label]
             print(f"BEQ: Branch taken to label '{target_label}'")
+            return True
         else:
             print(f"Error: Label '{target_label}' not found.")
             return False
-        return True
     else:
         print(f"BEQ: Branch not taken, x{rs1}={registers[rs1]}, x{rs2}={registers[rs2]}")
     return False
 
 def bne(rs1, rs2, target_label):
-    """Branch if Not Equal."""
     global program_counter
     if rs1 is None or rs2 is None:
         print(f"Error: BNE instruction missing operands rs1={rs1}, rs2={rs2}")
@@ -211,16 +208,15 @@ def bne(rs1, rs2, target_label):
         if target_label in labels:
             program_counter = labels[target_label]
             print(f"BNE: Branch taken to label '{target_label}'")
+            return True
         else:
             print(f"Error: Label '{target_label}' not found.")
             return False
-        return True
     else:
         print(f"BNE: Branch not taken, x{rs1}={registers[rs1]}, x{rs2}={registers[rs2]}")
     return False
 
 def blt(rs1, rs2, target_label):
-    """Branch if Less Than."""
     global program_counter
     if rs1 is None or rs2 is None:
         print(f"Error: BLT instruction missing operands rs1={rs1}, rs2={rs2}")
@@ -230,16 +226,15 @@ def blt(rs1, rs2, target_label):
         if target_label in labels:
             program_counter = labels[target_label]
             print(f"BLT: Branch taken to label '{target_label}'")
+            return True
         else:
             print(f"Error: Label '{target_label}' not found.")
             return False
-        return True
     else:
         print(f"BLT: Branch not taken, x{rs1}={registers[rs1]}, x{rs2}={registers[rs2]}")
     return False
 
 def bge(rs1, rs2, target_label):
-    """Branch if Greater Than or Equal."""
     global program_counter
     if rs1 is None or rs2 is None:
         print(f"Error: BGE instruction missing operands rs1={rs1}, rs2={rs2}")
@@ -249,16 +244,15 @@ def bge(rs1, rs2, target_label):
         if target_label in labels:
             program_counter = labels[target_label]
             print(f"BGE: Branch taken to label '{target_label}'")
+            return True
         else:
             print(f"Error: Label '{target_label}' not found.")
             return False
-        return True
     else:
         print(f"BGE: Branch not taken, x{rs1}={registers[rs1]}, x{rs2}={registers[rs2]}")
     return False
 
 def bltu(rs1, rs2, target_label):
-    """Branch if Less Than Unsigned."""
     global program_counter
     if rs1 is None or rs2 is None:
         print(f"Error: BLTU instruction missing operands rs1={rs1}, rs2={rs2}")
@@ -268,16 +262,15 @@ def bltu(rs1, rs2, target_label):
         if target_label in labels:
             program_counter = labels[target_label]
             print(f"BLTU: Branch taken to label '{target_label}'")
+            return True
         else:
             print(f"Error: Label '{target_label}' not found.")
             return False
-        return True
     else:
         print(f"BLTU: Branch not taken, x{rs1}={registers[rs1]}, x{rs2}={registers[rs2]}")
     return False
 
 def bgeu(rs1, rs2, target_label):
-    """Branch if Greater Than or Equal Unsigned."""
     global program_counter
     if rs1 is None or rs2 is None:
         print(f"Error: BGEU instruction missing operands rs1={rs1}, rs2={rs2}")
@@ -287,17 +280,16 @@ def bgeu(rs1, rs2, target_label):
         if target_label in labels:
             program_counter = labels[target_label]
             print(f"BGEU: Branch taken to label '{target_label}'")
+            return True
         else:
             print(f"Error: Label '{target_label}' not found.")
             return False
-        return True
     else:
         print(f"BGEU: Branch not taken, x{rs1}={registers[rs1]}, x{rs2}={registers[rs2]}")
     return False
 
-# Memory Instructions
+# Load and Store Instructions
 def lw(rd, offset, rs1):
-    """Load Word."""
     if rd == 0:
         print("Warning: Attempt to write to x0 ignored.")
         return
@@ -310,7 +302,6 @@ def lw(rd, offset, rs1):
     print(f"LW: Loaded word {registers[rd]} from address {address} into x{rd}")
 
 def lb(rd, offset, rs1):
-    """Load Byte."""
     if rd == 0:
         print("Warning: Attempt to write to x0 ignored.")
         return
@@ -326,7 +317,6 @@ def lb(rd, offset, rs1):
     print(f"LB: Loaded byte {registers[rd]} from address {address} into x{rd}")
 
 def lbu(rd, offset, rs1):
-    """Load Byte Unsigned."""
     if rd == 0:
         print("Warning: Attempt to write to x0 ignored.")
         return
@@ -339,7 +329,6 @@ def lbu(rd, offset, rs1):
     print(f"LBU: Loaded unsigned byte {registers[rd]} from address {address} into x{rd}")
 
 def lh(rd, offset, rs1):
-    """Load Halfword."""
     if rd == 0:
         print("Warning: Attempt to write to x0 ignored.")
         return
@@ -352,7 +341,6 @@ def lh(rd, offset, rs1):
     print(f"LH: Loaded halfword {registers[rd]} from address {address} into x{rd}")
 
 def lhu(rd, offset, rs1):
-    """Load Halfword Unsigned."""
     if rd == 0:
         print("Warning: Attempt to write to x0 ignored.")
         return
@@ -365,7 +353,6 @@ def lhu(rd, offset, rs1):
     print(f"LHU: Loaded unsigned halfword {registers[rd]} from address {address} into x{rd}")
 
 def sw(rs2, offset, rs1):
-    """Store Word."""
     if rs1 is None or rs2 is None or offset is None:
         print(f"Error: SW instruction missing operands rs2={rs2}, rs1={rs1}, offset={offset}")
         return
@@ -376,7 +363,6 @@ def sw(rs2, offset, rs1):
     print(f"SW: Stored value {value_to_store} from x{rs2} to memory address {address}")
 
 def sb(rs2, offset, rs1):
-    """Store Byte."""
     if rs1 is None or rs2 is None or offset is None:
         print(f"Error: SB instruction missing operands rs2={rs2}, rs1={rs1}, offset={offset}")
         return
@@ -387,7 +373,6 @@ def sb(rs2, offset, rs1):
     print(f"SB: Stored byte {value_to_store} from x{rs2} to memory address {address}")
 
 def sh(rs2, offset, rs1):
-    """Store Halfword."""
     if rs1 is None or rs2 is None or offset is None:
         print(f"Error: SH instruction missing operands rs2={rs2}, rs1={rs1}, offset={offset}")
         return
@@ -399,49 +384,49 @@ def sh(rs2, offset, rs1):
 
 # Jump and Link Instructions
 def jal(rd, target_label):
-    """Jump and Link."""
-    global program_counter
-    if rd is None or target_label is None:
-        print(f"Error: JAL instruction missing operands rd={rd}, label={target_label}")
-        return
-
-    if rd != 0:
-        registers[rd] = program_counter + 1
-
-    if isinstance(target_label, str):
-        if target_label in labels:
-            program_counter = labels[target_label]
-        else:
-            print(f"Error: Label '{target_label}' not found.")
-            return
-    elif isinstance(target_label, int):
-        program_counter = target_label
-
-    print(f"JAL: Jumped to label '{target_label}', return address stored in x{rd}")
-
-def jalr(rd, rs1, offset):
-    """Jump and Link Register."""
     global program_counter
     if rd != 0:
-        registers[rd] = program_counter + 1
-    target_address = (registers[rs1] + offset) & 0xFFFFFFFE  # Ensure least significant bit is zero
-    program_counter = target_address
-    print(f"JALR: Jumped to address {target_address}, return address stored in x{rd}")
+        registers[rd] = program_counter + 1  # Store return address
+        print(f"JAL: Set x{rd} to {registers[rd]}")
+    if target_label in labels:
+        program_counter = labels[target_label]  # Jump to label
+        print(f"JAL: Jumping to label '{target_label}' at instruction index {labels[target_label]}")
+    else:
+        raise ValueError(f"Label '{target_label}' not found.")
 
-# Immediate Instructions
+def jalr(rd, rs1, imm):
+    global program_counter
+    if rd != 0:
+        registers[rd] = program_counter + 1  # Store return address
+        print(f"JALR: Set x{rd} to {registers[rd]}")
+    target_address = (registers[rs1] + imm) & 0xFFFFFFFF
+    if 0 <= target_address < len(executable_instructions):
+        program_counter = target_address  # Jump to target address
+        print(f"JALR: Jumping to instruction index {target_address}")
+    else:
+        print(f"Error: Invalid jump address '{target_address}'.")
+        sys.exit(1)
+
+# Upper Immediate Instructions
 def lui(rd, imm):
     if rd != 0:
-        registers[rd] = imm << 12
+        result = (imm << 12) & 0xFFFFFFFF
+        registers[rd] = result
+        print(f"LUI: Loaded immediate {imm} into x{rd} -> {registers[rd]}")
     else:
         print("Warning: Attempt to write to x0 ignored.")
 
 def auipc(rd, imm):
     if rd != 0:
-        registers[rd] = program_counter + (imm << 12)
+        # In a real CPU, AUIPC adds the upper immediate to the current PC in bytes.
+        # Here, we'll treat PC as an index, so shift appropriately.
+        result = (program_counter + (imm << 12)) & 0xFFFFFFFF
+        registers[rd] = result
+        print(f"AUIPC: Loaded immediate {imm} into x{rd} -> {registers[rd]}")
     else:
         print("Warning: Attempt to write to x0 ignored.")
 
-# System Instructions
+# System Instructions which halt the program
 def ecall():
     print("ECALL - Halting")
     sys.exit(0)
@@ -459,6 +444,23 @@ def fence_tso():
 def pause():
     print("PAUSE - Operation not implemented.")
 
+def halt():
+    print("HALT - Terminating execution.")
+    sys.exit(0)
+
+# Dictionary of instructions
+instructions = {
+    'ADD': add, 'SUB': sub, 'ADDI': addi, 'ANDI': andi,
+    'ORI': ori, 'XORI': xori, 'SLT': slt, 'SLTI': slti, 'SLTIU': sltiu,
+    'SLL': sll, 'SRL': srl, 'SRA': sra, 'SLLI': slli, 'SRLI': srli, 'SRAI': srai,
+    'SLTU': sltu, 'XOR': xor, 'OR': or_, 'AND': and_,
+    'BEQ': beq, 'BNE': bne, 'BLT': blt, 'BGE': bge, 'BLTU': bltu, 'BGEU': bgeu,
+    'LW': lw, 'SW': sw, 'LH': lh, 'LHU': lhu, 'LB': lb, 'LBU': lbu, 'SB': sb, 'SH': sh,
+    'JAL': jal, 'JALR': jalr, 'LUI': lui, 'AUIPC': auipc,
+    'FENCE': fence, 'FENCE.TSO': fence_tso, 'PAUSE': pause,
+    'ECALL': ecall, 'EBREAK': ebreak, 'HALT': halt
+}
+
 # Utility Functions
 def read_instructions_from_file(file_path):
     try:
@@ -469,7 +471,6 @@ def read_instructions_from_file(file_path):
         sys.exit(1)
 
 def parse_register(reg):
-    """Helper function to parse register names like x0, x1, etc."""
     reg = reg.strip()
     if reg.lower().startswith('x') and reg[1:].isdigit():
         reg_num = int(reg[1:])
@@ -479,7 +480,6 @@ def parse_register(reg):
     return None
 
 def parse_immediate(value):
-    """Helper function to parse immediate values."""
     try:
         return int(value, 0)
     except ValueError:
@@ -487,7 +487,6 @@ def parse_immediate(value):
         return None
 
 def instruction_splitting(line):
-    """Split an instruction line into its components."""
     line = line.strip()
     if '#' in line:
         line = line.split('#')[0].strip()
@@ -498,7 +497,7 @@ def instruction_splitting(line):
     parts = line.replace(',', ' ').split()
     opcode = parts[0].upper()
 
-    # Handling S-type and I-type instructions with offset notation
+    # Handling Load and Store Instructions with Offset Notation
     if opcode in ['SW', 'SB', 'SH', 'LW', 'LH', 'LHU', 'LB', 'LBU']:
         if len(parts) != 3:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
@@ -516,8 +515,31 @@ def instruction_splitting(line):
         else:
             return opcode, reg1, reg2, None, offset, None  # rd, rs1, offset
 
-    # I-type instructions
-    elif opcode in ['ADDI', 'ANDI', 'ORI', 'XORI', 'SLTI', 'SLTIU', 'JALR']:
+
+    # Handling JALR Instruction
+    elif opcode == 'JALR':
+        if len(parts) == 2:
+            # Format: jalr rd
+            rd = parse_register(parts[1])
+            return opcode, rd, None, None, 0, None
+        elif len(parts) == 3:
+            # Format: jalr rd, rs1
+            rd = parse_register(parts[1])
+            rs1 = parse_register(parts[2])
+            return opcode, rd, rs1, None, 0, None
+        elif len(parts) == 4:
+            # Format: jalr rd, rs1, imm
+            rd = parse_register(parts[1])
+            rs1 = parse_register(parts[2])
+            imm = parse_immediate(parts[3])
+            return opcode, rd, rs1, None, imm, None
+        else:
+            print(f"Error: JALR instruction missing operands. line='{line}'")
+            return None, None, None, None, None, None
+
+    # Immediate Arithmetic and Logical Instructions
+    elif opcode in ['ADDI', 'ANDI', 'ORI', 'XORI', 'SLTI', 'SLTIU',
+                    'SLLI', 'SRLI', 'SRAI']:
         if len(parts) != 4:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
             return None, None, None, None, None, None
@@ -526,8 +548,9 @@ def instruction_splitting(line):
         imm = parse_immediate(parts[3])
         return opcode, rd, rs1, None, imm, None
 
-    # R-type instructions
-    elif opcode in ['ADD', 'SUB', 'SLT', 'SLTU', 'XOR', 'OR', 'AND', 'SLL', 'SRL', 'SRA']:
+    # R-type instructions 
+    elif opcode in ['ADD', 'SUB', 'SLT', 'SLTU', 'XOR', 'OR', 'AND',
+                    'SLL', 'SRL', 'SRA']:
         if len(parts) != 4:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
             return None, None, None, None, None, None
@@ -536,7 +559,7 @@ def instruction_splitting(line):
         rs2 = parse_register(parts[3])
         return opcode, rd, rs1, rs2, None, None
 
-    # B-type instructions
+    # Branch Instructions
     elif opcode in ['BEQ', 'BNE', 'BLT', 'BGE', 'BLTU', 'BGEU']:
         if len(parts) != 4:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
@@ -546,7 +569,7 @@ def instruction_splitting(line):
         label = parts[3]
         return opcode, None, rs1, rs2, label, None
 
-    # U-type instructions
+    # Upper Immediate Instructions
     elif opcode in ['LUI', 'AUIPC']:
         if len(parts) != 3:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
@@ -555,36 +578,40 @@ def instruction_splitting(line):
         imm = parse_immediate(parts[2])
         return opcode, rd, None, None, imm, None
 
-    # J-type instructions
+    # Jump Instructions
     elif opcode == 'JAL':
-        if len(parts) != 3:
-            print(f"Error: {opcode} instruction missing operands. line='{line}'")
+        if len(parts) == 2:
+            # Format: jal label
+            rd = 1  # Default return register x1
+            label = parts[1]
+            return opcode, rd, None, None, label, None
+        elif len(parts) == 3:
+            # Format: jal rd, label
+            rd = parse_register(parts[1])
+            label = parts[2]
+            return opcode, rd, None, None, label, None
+        else:
+            print(f"Error: JAL instruction missing operands. line='{line}'")
             return None, None, None, None, None, None
-        rd = parse_register(parts[1])
-        label = parts[2]
-        return opcode, rd, None, None, label, None
 
-    # System instructions
-    elif opcode in ['ECALL', 'EBREAK', 'FENCE', 'FENCE.TSO', 'PAUSE']:
+    # System instructions (ECALL, EBREAK, FENCE, FENCE.TSO, PAUSE, HALT)
+    elif opcode in ['ECALL', 'EBREAK', 'FENCE', 'FENCE.TSO', 'PAUSE', 'HALT']:
         return opcode, None, None, None, None, None
 
-    print(f"Error: Unrecognized instruction format. line='{line}'")
-    return None, None, None, None, None, None
+    else:
+        print(f"Error: Unrecognized instruction format. line='{line}'")
+        return None, None, None, None, None, None
 
 def printRegisters(instruction=None):
-    """Prints the state of the program."""
     global program_counter
 
     if instruction:
         print(f"\n=== Executing Instruction ===\nInstruction: {instruction}\n")
 
-    # Adjust the program counter for display purposes
-    current_pc = program_counter
-    if instruction:
-        current_pc -= 1
+    display_pc = program_counter
 
     print(f"{'='*60}")
-    print(f"Program Counter (PC): {current_pc}")
+    print(f"Program Counter (PC): {display_pc}")
     print(f"{'='*60}\n")
 
     # Print Registers
@@ -594,7 +621,11 @@ def printRegisters(instruction=None):
     print('-' * 80)
     for i in range(32):
         reg_name = f"x{i}"
-        decimal_value = registers[i]
+        # Convert to signed decimal
+        if registers[i] & 0x80000000:
+            decimal_value = registers[i] - 0x100000000
+        else:
+            decimal_value = registers[i]
         hex_value = f"0x{registers[i]:08X}"
         bin_value = f"0b{registers[i]:032b}"
         print(f"{reg_name:<10} {decimal_value:>12} {hex_value:>15} {bin_value:>35}")
@@ -608,7 +639,11 @@ def printRegisters(instruction=None):
         print('-' * 100)
         for address in sorted(memory.keys()):
             value = memory[address]
-            decimal_value = value
+            # Convert to signed decimal for bytes
+            if value & 0x80:
+                decimal_value = value - 0x100
+            else:
+                decimal_value = value
             hex_value = f"0x{value:02X}"
             bin_value = f"0b{value:08b}"
             print(f"0x{address:08X} {address:>15} {decimal_value:>12} {hex_value:>15} {bin_value:>35}")
@@ -619,28 +654,26 @@ def printRegisters(instruction=None):
     if labels:
         print(f"{'='*25} Labels {'='*25}\n")
         for label, addr in labels.items():
-            print(f"Label '{label}': Address {addr}")
+            print(f"Label '{label}': Instruction Index {addr}")
     else:
         print("\nNo labels found.\n")
 
-# User Input Function
 def user_input():
-    global program_counter
     file_path = input("Enter the instruction file path: ").strip()
     while True:
         try:
-            program_counter = int(input("Enter the starting address of the program: ").strip())
+            program_counter_initial = int(input("Enter the starting address of the program (e.g., 0): ").strip())
             break
         except ValueError:
-            print("Invalid input. Please enter an integer for the starting address.")
+            print("Invalid input. Please enter a valid integer for the starting address.")
 
     # Prompt for optional memory file
     memory_file = input("Enter the memory initialization file path (leave empty if none): ").strip()
     if memory_file:
         load_memory_from_file(memory_file)
-    return file_path
+    return file_path, program_counter_initial
 
-# Function to load memory from a file
+# Function to load memory from a file (initialize memory)
 def load_memory_from_file(memory_file):
     global memory
     try:
@@ -648,7 +681,11 @@ def load_memory_from_file(memory_file):
             for line in file:
                 line = line.strip()
                 if line and not line.startswith('#'):
-                    address_str, value_str = line.split(',')
+                    parts = line.split(',')
+                    if len(parts) != 2:
+                        print(f"Error: Invalid memory initialization line: '{line}'")
+                        continue
+                    address_str, value_str = parts
                     address = int(address_str.strip(), 0)
                     value = value_str.strip()
                     if value.startswith('"') and value.endswith('"'):
@@ -665,108 +702,117 @@ def load_memory_from_file(memory_file):
     except FileNotFoundError:
         print(f"Error: Memory file '{memory_file}' not found.")
         sys.exit(1)
+    except ValueError as ve:
+        print(f"Error processing memory file: {ve}")
+        sys.exit(1)
 
-# Main Function
 def main():
     global program_counter
     global labels
+    global executable_instructions
 
-    # Step 1: Read the instruction file
-    file_path = user_input()
+    # Step 1: Read the instruction file and initialize PC
+    file_path, starting_pc = user_input()
     instruction_lines = read_instructions_from_file(file_path)
 
-    # Step 2: First pass to register labels
+    # Step 2: First pass to register labels and prepare executable instructions
     labels = {}
+    executable_instructions = []
+    
     for line_number, line in enumerate(instruction_lines):
-        line = line.strip()
-        if '#' in line:
-            line = line.split('#')[0].strip()
-        if not line:
+        stripped_line = line.strip()
+        
+        # Remove comments
+        if '#' in stripped_line:
+            stripped_line = stripped_line.split('#')[0].strip()
+        
+        # Skip empty lines
+        if not stripped_line:
             continue
 
-        if line.endswith(':'):
-            label_name = line[:-1].strip()
-            labels[label_name] = line_number
+        # Check for labels
+        if stripped_line.endswith(':'):
+            label_name = stripped_line[:-1].strip()
+            # Map label to the next instruction's index
+            labels[label_name] = len(executable_instructions)
+        else:
+            # Append the executable instruction
+            executable_instructions.append(stripped_line)
+
+    # Debug: Print label mappings
+    print(f"\nLabel Mappings: {labels}\n")
 
     # Step 3: Execute instructions
-    instruction_count = len(instruction_lines)
-    while program_counter < instruction_count:
-        line = instruction_lines[program_counter].strip()
-        original_line = line  # Keep the original line for printing
+    instruction_count = len(executable_instructions)
+    program_counter = starting_pc  # Initialize PC to user-specified starting address
+    running = True  # Flag to control the execution loop
 
-        # Ignore comments and empty lines
-        if '#' in line:
-            line = line.split('#')[0].strip()
-        if not line:
-            program_counter += 1
-            continue
+    while running and 0 <= program_counter < instruction_count:
+        # Fetch the current instruction
+        line = executable_instructions[program_counter].strip()
+        original_line = line  # Preserve the original line for debugging
 
-        # Check if the line is a label and skip it during execution
-        if line.endswith(':'):
-            program_counter += 1
-            continue
+        # Print the current instruction and PC before execution
+        printRegisters(instruction=original_line)
 
         # Parse the instruction
         opcode, rd, rs1, rs2, imm_or_label, offset = instruction_splitting(line)
         if not opcode:
+            # If parsing failed, skip to the next instruction
             program_counter += 1
             continue
 
-        # Execute the instruction based on its type
+        # Execute the instruction based on its opcode
         if opcode in instructions:
-            if opcode in ['BEQ', 'BNE', 'BGE', 'BLT', 'BLTU', 'BGEU']:
+            # Branch Instructions
+            if opcode in ['BEQ', 'BNE', 'BLT', 'BGE', 'BLTU', 'BGEU']:
                 branch_taken = instructions[opcode](rs1, rs2, imm_or_label)
-                if branch_taken:
-                    continue  # Branch taken; program_counter updated within the branch function
-                else:
-                    program_counter += 1  # Branch not taken; proceed to next instruction
-            elif opcode in ['JAL']:
+                if not branch_taken:
+                    program_counter += 1
+            # Jump Instructions
+            elif opcode == 'JAL':
                 instructions[opcode](rd, imm_or_label)
-                # Do not increment program_counter; it's updated within the instruction
-            elif opcode in ['JALR']:
+            elif opcode == 'JALR':
                 instructions[opcode](rd, rs1, imm_or_label)
-                # Do not increment program_counter; it's updated within the instruction
-            elif opcode in ['ADDI', 'ANDI', 'ORI', 'XORI', 'SLTI', 'SLTIU']:
+            # Immediate Arithmetic and Shift Instructions
+            elif opcode in ['ADDI', 'ANDI', 'ORI', 'XORI', 'SLTI', 'SLTIU',
+                            'SLLI', 'SRLI', 'SRAI']:
                 instructions[opcode](rd, rs1, imm_or_label)
                 program_counter += 1
-            elif opcode in ['LW', 'LB', 'LBU', 'LH', 'LHU']:
+            # Register-Register Arithmetic and Logical Instructions
+            elif opcode in ['ADD', 'SUB', 'SLT', 'SLTU', 'XOR', 'OR', 'AND',
+                            'SLL', 'SRL', 'SRA']:
+                instructions[opcode](rd, rs1, rs2)
+                program_counter += 1
+            # Load Instructions
+            elif opcode in ['LW', 'LH', 'LHU', 'LB', 'LBU']:
                 instructions[opcode](rd, imm_or_label, rs1)
                 program_counter += 1
-            elif opcode in ['SW', 'SB', 'SH']:
+            # Store Instructions
+            elif opcode in ['SW', 'SH', 'SB']:
                 instructions[opcode](rs2, imm_or_label, rs1)
                 program_counter += 1
+            # Upper Immediate Instructions
             elif opcode in ['LUI', 'AUIPC']:
                 instructions[opcode](rd, imm_or_label)
                 program_counter += 1
-            elif opcode in ['ECALL', 'EBREAK', 'FENCE', 'FENCE.TSO', 'PAUSE']:
+            # System Instructions
+            elif opcode in ['ECALL', 'EBREAK', 'FENCE', 'FENCE.TSO', 'PAUSE', 'HALT']:
                 instructions[opcode]()
+                if opcode == 'HALT':
+                    running = False
                 program_counter += 1
             else:
-                instructions[opcode](rd, rs1, rs2)
+                print(f"Error: Unhandled opcode '{opcode}'")
                 program_counter += 1
         else:
             print(f"Error: Unknown opcode '{opcode}'")
             program_counter += 1
-            continue
 
         # Ensure x0 remains zero
         registers[0] = 0
 
-        # Print the current state of registers after execution
-        printRegisters(instruction=original_line)
-
-# Dictionary of instructions
-instructions = {
-    'ADD': add, 'SUB': sub, 'ADDI': addi, 'ANDI': andi,
-    'ORI': ori, 'XORI': xori, 'SLT': slt, 'SLTI': slti, 'SLTIU': sltiu,
-    'SLL': sll, 'SRL': srl, 'SRA': sra, 'SLLI': slli, 'SRLI': srli, 'SRAI': srai,
-    'SLTU': sltu, 'XOR': xor, 'OR': or_, 'AND': and_,
-    'BEQ': beq, 'BNE': bne, 'BLT': blt, 'BGE': bge, 'BLTU': bltu, 'BGEU': bgeu,
-    'LW': lw, 'SW': sw, 'LH': lh, 'LHU': lhu, 'LB': lb, 'LBU': lbu, 'SB': sb, 'SH': sh,
-    'JAL': jal, 'JALR': jalr, 'LUI': lui, 'AUIPC': auipc,
-    'FENCE': fence, 'FENCE.TSO': fence_tso, 'PAUSE': pause,
-    'ECALL': ecall, 'EBREAK': ebreak
-}
+    print("Program execution completed.")
 
 if __name__ == "__main__":
     main()

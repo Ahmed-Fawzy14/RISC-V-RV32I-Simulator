@@ -7,6 +7,7 @@ main:
     andi x6, x1, 0x0F    # x6 = x1 & 0x0F = 0x0A (10)
     ori x7, x2, 0xF0     # x7 = x2 | 0xF0 = 0xF5 (245)
     xori x8, x1, 0xFF    # x8 = x1 ^ 0xFF = 0x55 (85)
+    ECALL
 
 # Expected Outputs:
 # x1 = 0xAA (170)

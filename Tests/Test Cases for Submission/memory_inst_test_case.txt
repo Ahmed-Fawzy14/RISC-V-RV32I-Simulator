@@ -10,3 +10,4 @@ LBU x6, 100(x2)
 LHU x7, 100(x2)
 LB x8, 100(x2)
 LH x9, 100(x2)
+EBREAK

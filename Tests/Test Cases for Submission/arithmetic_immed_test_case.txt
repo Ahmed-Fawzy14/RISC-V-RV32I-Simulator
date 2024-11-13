@@ -6,7 +6,8 @@ main:
     andi x5, x1, 0x0F      # x5 = x1 & 0x0F = 4
     ori x6, x1, 0xF0       # x6 = x1 | 0xF0 = 0xF4
     xori x7, x1, 0xFF      # x7 = x1 ^ 0xFF = 0x9B
-
+    EBREAK
+    
 # Expected Outputs:
 # x1 = 100
 # x2 = 50

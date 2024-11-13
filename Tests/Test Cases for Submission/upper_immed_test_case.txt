@@ -3,6 +3,7 @@ main:
     addi x1, x1, 0x678     # x1 = x1 + 0x678 = 0x12345678
     auipc x2, 0x0          # x2 = PC + 0 (current address)
     addi x2, x2, 8         # x2 points to the next instruction
+    PAUSE
 
 # Expected Outputs:
 # x1 = 305419896
