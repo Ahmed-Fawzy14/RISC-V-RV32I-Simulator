@@ -1,0 +1,15 @@
+Oct 26, 4:05pm-4:40pm: The entire team met to discuss the project, generate the outline, and split up the tasks.
+Nov 5, 3:29pm: Worked on label handling.
+Nov 7, 8:18pm: Added comment handling and some instruction execution.
+Nov 10, 9:10pm: Committed work for label handling, comment handling, and half of instructions.
+Nov 11, 6:01pm: Added support for missing instructions (memory handling, some immediate, jumping, and branching) 
+Nov 11, 9:27pm: Started creating test cases that include all 42 instructions. 
+Nov 12, 7:00pm: Added byte wise memory. Also fixed bugs related to unsigned and signed instructions. 
+Nov 12, 11:38pm: Changed how instruction splitting works and updated main.
+Nov 13, 1:00am: Fixed branching bug and jumping bug (Still need to test), but still have JALR bug. Also there is a PC bug (can only start from 0). Along minimal changed to how instruction splitting works and main.
+Nov 13, 6:21am: Committing  branching and jumping bug fixes.
+Nov 13, 6:00pm: Fixed JALR bug. Now working on finishing the test cases, and making sure they work.
+Nov 13, 6:21am: Committing JALR bug fix.
+Nov 13, 6:00pm: All test cases working, but still have the PC bug. 
+Nov 13, 6:32pm: PC bug fixed.
+Nov 13, 6:33pm: Committing finished backend.
