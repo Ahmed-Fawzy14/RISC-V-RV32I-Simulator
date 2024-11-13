@@ -1,0 +1,22 @@
+Log Entries for Ahmed Ayman Elkhodary (900213472):
+
+November 3, 2024:
+- Developed the initial structure for the RV32I emulator in Python.
+- Implemented register setup (32 registers initialized to 0).
+- Created functions for basic arithmetic and logical operations: ADD, SUB, ADDI, ANDI, ORI, XORI.
+- Added shift operations: SLLI, SRLI, SRAI.
+- Set up memory and program counter.
+- Created functions for loading (LW) and storing (SW) data in memory.
+- Implemented immediate instructions: LUI, AUIPC.
+- Developed branch instructions: BEQ, BNE, BLT.
+
+November 11, 2024:
+- Implemented halting instructions: ECALL, EBREAK, PAUSE, FENCE, FENCE.TSO with placeholder behavior.
+- Created a dictionary (`instructions`) to map instruction names to their respective function calls.
+- Developed `read_instructions_from_file` to read instruction lines from a file.
+- Added `instruction_splitting` to parse instruction lines into opcode, registers, and immediate values.
+- Completed a `main` function to load and parse instructions from a file (`rv32i_instructions.txt`).
+- Ensured the program correctly processes and prints the parsed instructions.
+
+File Creation:
+- Created `rv32i_instructions.txt` to provide test data for the emulator, containing instructions formatted with commas.
