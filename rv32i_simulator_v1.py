@@ -693,20 +693,23 @@ def main():
     global executable_instructions
 
     # Step 1: Read the instruction file and initialize PC
-    file_path, starting_pc = user_input()
+    file_path, starting_pc = user_input()  # starting_pc is an address, e.g., 100
     instruction_lines = read_instructions_from_file(file_path)
+
+    # Define the base address
+    base_address = starting_pc
 
     # Step 2: First pass to register labels and prepare executable instructions
     labels = {}
     executable_instructions = []
-    
+
     for line_number, line in enumerate(instruction_lines):
         stripped_line = line.strip()
-        
+
         # Remove comments
         if '#' in stripped_line:
             stripped_line = stripped_line.split('#')[0].strip()
-        
+
         # Skip empty lines
         if not stripped_line:
             continue
@@ -714,24 +717,36 @@ def main():
         # Check for labels
         if stripped_line.endswith(':'):
             label_name = stripped_line[:-1].strip()
-            # Map label to the next instruction's index
-            labels[label_name] = len(executable_instructions)
+            # Map label to the instruction address
+            labels[label_name] = base_address + len(executable_instructions)
         else:
             # Append the executable instruction
             executable_instructions.append(stripped_line)
 
-    # Debug: Print label mappings
+    #Print label mappings
     print(f"\nLabel Mappings: {labels}\n")
 
     # Step 3: Execute instructions
     instruction_count = len(executable_instructions)
     program_counter = starting_pc  # Initialize PC to user-specified starting address
-    program_counter = 0  # Initialize PC to user-specified starting address
     running = True  # Flag to control the execution loop
 
-    while running and 0 <= program_counter < instruction_count:
+    # Validate starting_pc
+    if program_counter < base_address or program_counter >= base_address + instruction_count:
+        print(f"Error: Starting PC {program_counter} is out of valid instruction address range.")
+        return
+
+    while running and 0 <= (program_counter - base_address) < instruction_count:
+        # Calculate the index in the executable_instructions list
+        index = program_counter - base_address
+
         # Fetch the current instruction
-        line = executable_instructions[program_counter].strip()
+        try:
+            line = executable_instructions[index].strip()
+        except IndexError:
+            print(f"Error: Program counter {program_counter} out of bounds.")
+            break
+
         original_line = line  # Preserve the original line for debugging
 
         # Parse the instruction
@@ -793,6 +808,7 @@ def main():
 
         # Ensure x0 remains zero
         registers[0] = 0
+
 
 
 

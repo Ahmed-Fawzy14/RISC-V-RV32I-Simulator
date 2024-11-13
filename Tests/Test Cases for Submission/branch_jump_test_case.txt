@@ -15,7 +15,7 @@ next:
 less:
     addi x6, x0, 1       # x6 = 1 (branch taken)
 end:
-FENCE.TSO
+FENCE.TSOcls
 
 
 # Expected Outputs:
