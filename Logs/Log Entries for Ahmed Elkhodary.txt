@@ -9,8 +9,6 @@ November 3, 2024:
 - Created functions for loading (LW) and storing (SW) data in memory.
 - Implemented immediate instructions: LUI, AUIPC.
 - Developed branch instructions: BEQ, BNE, BLT.
-
-November 11, 2024:
 - Implemented halting instructions: ECALL, EBREAK, PAUSE, FENCE, FENCE.TSO with placeholder behavior.
 - Created a dictionary (`instructions`) to map instruction names to their respective function calls.
 - Developed `read_instructions_from_file` to read instruction lines from a file.
