@@ -48,15 +48,15 @@ The simulator supports 42 RV32I instructions, with halting functionality for uns
    python3 simulator.py
 
 ### Team Members
-Name: Ahmed Ayman Elkhodary
-ID: 900213472
+Name: Ahmed Ayman Elkhodary |
+ID: 900213472 |
 Email: aae121@aucegypt.edu
 
-Name: Ahmed Fawzy Abdelkader
-ID: 900222633
+Name: Ahmed Fawzy Abdelkader |
+ID: 900222633 |
 Email: ahmed-fawzy@aucegypt.edu
 
-Name: Omar Leithy
-ID: 900221663
+Name: Omar Leithy |
+ID: 900221663 |
 Email: omarleithym@aucegypt.edu
 
