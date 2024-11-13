@@ -726,6 +726,7 @@ def main():
     # Step 3: Execute instructions
     instruction_count = len(executable_instructions)
     program_counter = starting_pc  # Initialize PC to user-specified starting address
+    program_counter = 0  # Initialize PC to user-specified starting address
     running = True  # Flag to control the execution loop
 
     while running and 0 <= program_counter < instruction_count:
