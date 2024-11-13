@@ -1,0 +1,17 @@
+main:
+    addi x1, x0, 100       # x1 = 100
+    addi x2, x1, -50       # x2 = x1 - 50 = 50
+    slti x3, x2, 60        # x3 = (x2 < 60) ? 1 : 0 => x3 = 1
+    sltiu x4, x2, 50       # x4 = (x2 < 50) ? 1 : 0 => x4 = 0
+    andi x5, x1, 0x0F      # x5 = x1 & 0x0F = 4
+    ori x6, x1, 0xF0       # x6 = x1 | 0xF0 = 0xF4
+    xori x7, x1, 0xFF      # x7 = x1 ^ 0xFF = 0x9B
+
+# Expected Outputs:
+# x1 = 100
+# x2 = 50
+# x3 = 1   # Because 50 < 60
+# x4 = 0   # Because 50 >= 50 (unsigned)
+# x5 = 4   # 100 & 0x0F = 0x64 & 0x0F = 0x04
+# x6 = 244 # 100 | 0xF0 = 0x64 | 0xF0 = 0xF4
+# x7 = 155 # 100 ^ 0xFF = 0x64 ^ 0xFF = 0x9B

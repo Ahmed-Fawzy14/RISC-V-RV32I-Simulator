@@ -498,26 +498,38 @@ def instruction_splitting(line):
     parts = line.replace(',', ' ').split()
     opcode = parts[0].upper()
 
-    # Handling S-type and I-type instructions with offset notation
-    if opcode in ['SW', 'SB', 'SH', 'LW', 'LH', 'LHU', 'LB', 'LBU']:
+    # Handling S-type and I-type instructions with offset notation (Load, Store, JALR)
+    if opcode in ['SW', 'SB', 'SH', 'LW', 'LH', 'LHU', 'LB', 'LBU', 'JALR']:
         if len(parts) != 3:
-            print(f"Error: {opcode} instruction missing operands. line='{line}'")
-            return None, None, None, None, None, None
-        reg1 = parse_register(parts[1])
+            if opcode == 'JALR' and len(parts) == 4:
+                # Handle 'jalr rd, rs1, imm' format
+                rd = parse_register(parts[1])
+                rs1 = parse_register(parts[2])
+                imm = parse_immediate(parts[3])
+                return opcode, rd, rs1, None, imm, None
+            else:
+                print(f"Error: {opcode} instruction missing operands. line='{line}'")
+                return None, None, None, None, None, None
+
+        reg1 = parse_register(parts[1])  # rd for loads, rs2 for stores, rd for JALR
         try:
             offset_str, base_register = parts[2].split('(')
             offset = parse_immediate(offset_str)
-            reg2 = parse_register(base_register[:-1])
+            reg2 = parse_register(base_register[:-1])  # rs1 (base register)
         except ValueError:
             print(f"Error: Invalid offset notation. line='{line}'")
             return None, None, None, None, None, None
-        if opcode in ['SW', 'SB', 'SH']:
-            return opcode, None, reg2, reg1, offset, None  # rs2, offset, rs1
-        else:
-            return opcode, reg1, reg2, None, offset, None  # rd, rs1, offset
 
-    # I-type instructions
-    elif opcode in ['ADDI', 'ANDI', 'ORI', 'XORI', 'SLTI', 'SLTIU', 'JALR']:
+        if opcode in ['SW', 'SB', 'SH']:  # Store instructions
+            return opcode, None, reg2, reg1, offset, None  # opcode, None, rs1, rs2, offset, None
+        elif opcode in ['LW', 'LH', 'LHU', 'LB', 'LBU']:  # Load instructions
+            return opcode, reg1, reg2, None, offset, None  # opcode, rd, rs1, None, offset, None
+        elif opcode == 'JALR':  # JALR with offset notation
+            return opcode, reg1, reg2, None, offset, None  # opcode, rd, rs1, None, offset, None
+
+    # I-type instructions (Immediate Arithmetic and Logical Instructions)
+    elif opcode in ['ADDI', 'ANDI', 'ORI', 'XORI', 'SLTI', 'SLTIU',
+                    'SLLI', 'SRLI', 'SRAI']:
         if len(parts) != 4:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
             return None, None, None, None, None, None
@@ -526,8 +538,9 @@ def instruction_splitting(line):
         imm = parse_immediate(parts[3])
         return opcode, rd, rs1, None, imm, None
 
-    # R-type instructions
-    elif opcode in ['ADD', 'SUB', 'SLT', 'SLTU', 'XOR', 'OR', 'AND', 'SLL', 'SRL', 'SRA']:
+    # R-type instructions (Register-Register Arithmetic and Logical Instructions)
+    elif opcode in ['ADD', 'SUB', 'SLT', 'SLTU', 'XOR', 'OR', 'AND',
+                    'SLL', 'SRL', 'SRA']:
         if len(parts) != 4:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
             return None, None, None, None, None, None
@@ -536,7 +549,7 @@ def instruction_splitting(line):
         rs2 = parse_register(parts[3])
         return opcode, rd, rs1, rs2, None, None
 
-    # B-type instructions
+    # B-type instructions (Branch Instructions)
     elif opcode in ['BEQ', 'BNE', 'BLT', 'BGE', 'BLTU', 'BGEU']:
         if len(parts) != 4:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
@@ -546,7 +559,7 @@ def instruction_splitting(line):
         label = parts[3]
         return opcode, None, rs1, rs2, label, None
 
-    # U-type instructions
+    # U-type instructions (Upper Immediate Instructions)
     elif opcode in ['LUI', 'AUIPC']:
         if len(parts) != 3:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
@@ -555,7 +568,7 @@ def instruction_splitting(line):
         imm = parse_immediate(parts[2])
         return opcode, rd, None, None, imm, None
 
-    # J-type instructions
+    # J-type instructions (Jump Instructions)
     elif opcode == 'JAL':
         if len(parts) != 3:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
@@ -564,12 +577,15 @@ def instruction_splitting(line):
         label = parts[2]
         return opcode, rd, None, None, label, None
 
-    # System instructions
+    # System instructions (ECALL, EBREAK, FENCE, FENCE.TSO, PAUSE)
     elif opcode in ['ECALL', 'EBREAK', 'FENCE', 'FENCE.TSO', 'PAUSE']:
         return opcode, None, None, None, None, None
 
-    print(f"Error: Unrecognized instruction format. line='{line}'")
-    return None, None, None, None, None, None
+    else:
+        print(f"Error: Unrecognized instruction format. line='{line}'")
+        return None, None, None, None, None, None
+
+
 
 def printRegisters(instruction=None):
     """Prints the state of the program."""
@@ -714,40 +730,50 @@ def main():
 
         # Execute the instruction based on its type
         if opcode in instructions:
-            if opcode in ['BEQ', 'BNE', 'BGE', 'BLT', 'BLTU', 'BGEU']:
-                branch_taken = instructions[opcode](rs1, rs2, imm_or_label)
-                if branch_taken:
-                    continue  # Branch taken; program_counter updated within the branch function
-                else:
-                    program_counter += 1  # Branch not taken; proceed to next instruction
-            elif opcode in ['JAL']:
+            # Branch Instructions
+            if opcode in ['BEQ', 'BNE', 'BLT', 'BGE', 'BLTU', 'BGEU']:
+                instructions[opcode](rs1, rs2, imm_or_label)
+                # Branch instructions modify the program_counter internally
+            # Jump Instructions
+            elif opcode == 'JAL':
                 instructions[opcode](rd, imm_or_label)
-                # Do not increment program_counter; it's updated within the instruction
-            elif opcode in ['JALR']:
+                # JAL modifies the program_counter internally
+            elif opcode == 'JALR':
                 instructions[opcode](rd, rs1, imm_or_label)
-                # Do not increment program_counter; it's updated within the instruction
-            elif opcode in ['ADDI', 'ANDI', 'ORI', 'XORI', 'SLTI', 'SLTIU']:
+                # JALR modifies the program_counter internally
+            # Immediate Arithmetic and Shift Instructions
+            elif opcode in ['ADDI', 'ANDI', 'ORI', 'XORI', 'SLTI', 'SLTIU',
+                            'SLLI', 'SRLI', 'SRAI']:
                 instructions[opcode](rd, rs1, imm_or_label)
                 program_counter += 1
-            elif opcode in ['LW', 'LB', 'LBU', 'LH', 'LHU']:
-                instructions[opcode](rd, imm_or_label, rs1)
+            # Register-Register Arithmetic and Logical Instructions
+            elif opcode in ['ADD', 'SUB', 'SLT', 'SLTU', 'XOR', 'OR', 'AND',
+                            'SLL', 'SRL', 'SRA']:
+                instructions[opcode](rd, rs1, rs2)
                 program_counter += 1
-            elif opcode in ['SW', 'SB', 'SH']:
-                instructions[opcode](rs2, imm_or_label, rs1)
+            # Load Instructions
+            elif opcode in ['LW', 'LH', 'LHU', 'LB', 'LBU']:
+                instructions[opcode](rd, offset, rs1)
                 program_counter += 1
+            # Store Instructions
+            elif opcode in ['SW', 'SH', 'SB']:
+                instructions[opcode](rs2, offset, rs1)
+                program_counter += 1
+            # Upper Immediate Instructions
             elif opcode in ['LUI', 'AUIPC']:
                 instructions[opcode](rd, imm_or_label)
                 program_counter += 1
+            # System Instructions
             elif opcode in ['ECALL', 'EBREAK', 'FENCE', 'FENCE.TSO', 'PAUSE']:
                 instructions[opcode]()
                 program_counter += 1
             else:
-                instructions[opcode](rd, rs1, rs2)
+                print(f"Error: Unhandled opcode '{opcode}'")
                 program_counter += 1
         else:
             print(f"Error: Unknown opcode '{opcode}'")
             program_counter += 1
-            continue
+
 
         # Ensure x0 remains zero
         registers[0] = 0

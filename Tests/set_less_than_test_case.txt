@@ -1,0 +1,14 @@
+main:
+    addi x1, x0, -1      # x1 = -1 (signed)
+    addi x2, x0, 1       # x2 = 1
+    slt x3, x1, x2       # x3 = (x1 < x2) ? 1 : 0 (signed comparison)
+    sltu x4, x1, x2      # x4 = (x1 < x2) ? 1 : 0 (unsigned comparison)
+    slti x5, x1, 0       # x5 = (x1 < 0) ? 1 : 0 (signed immediate)
+    sltiu x6, x1, 0      # x6 = (x1 < 0) ? 1 : 0 (unsigned immediate)
+# Expected Outputs:
+# x1 = 0xFFFFFFFF (-1)
+# x2 = 1
+# x3 = 1   # -1 < 1 (signed)
+# x4 = 0   # 0xFFFFFFFF > 0x1 (unsigned)
+# x5 = 1   # -1 < 0 (signed immediate)
+# x6 = 0   # 0xFFFFFFFF > 0x0 (unsigned immediate)

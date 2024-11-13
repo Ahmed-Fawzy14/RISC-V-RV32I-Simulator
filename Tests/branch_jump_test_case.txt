@@ -1,0 +1,26 @@
+main:
+    addi x1, x0, 5       # x1 = 5
+    addi x2, x0, 5       # x2 = 5
+    beq x1, x2, equal    # Branch if x1 == x2
+    addi x3, x0, 0       # x3 = 0 (will be skipped if branch taken)
+    jal x0, next
+equal:
+    addi x3, x0, 1       # x3 = 1 (branch taken)
+next:
+    addi x4, x0, 10      # x4 = 10
+    addi x5, x0, 20      # x5 = 20
+    blt x4, x5, less     # Branch if x4 < x5
+    addi x6, x0, 0       # x6 = 0 (will be skipped if branch taken)
+    jal x0, end
+less:
+    addi x6, x0, 1       # x6 = 1 (branch taken)
+end:
+
+
+# Expected Outputs:
+# x1 = 5
+# x2 = 5
+# x3 = 1   # Branch to 'equal' taken
+# x4 = 10
+# x5 = 20
+# x6 = 1   # Branch to 'less' taken

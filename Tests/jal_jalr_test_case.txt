@@ -1,0 +1,9 @@
+main:
+    jal x1, label          # Jump to 'label', x1 = return address
+    addi x2, x0, 0         # x2 = 0 (this instruction is skipped)
+label:
+    addi x2, x0, 1         # x2 = 1
+    # Testing JALR
+    jalr x0, 0(x1)         # Return to address in x1
+    addi x3, x0, 2         # x3 = 2 (this instruction is skipped)
+    # Program continues from here after JALR
