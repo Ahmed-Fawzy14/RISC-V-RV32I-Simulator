@@ -7,33 +7,28 @@ memory = {}
 labels = {}
 csr_registers = {}
 
-# Memory is handled in little-endian format
+# Memory is handled in little-endian format like in RISC-V 32I
 
-# Memory Handling Functions
+# Memory Handling Helper Functions
 def store_byte(address, value):
-    """Store a single byte (8 bits) in memory."""
     memory[address] = value & 0xFF
 
 def store_halfword(address, value):
-    """Store a halfword (2 bytes) in memory."""
     store_byte(address, value & 0xFF)
     store_byte(address + 1, (value >> 8) & 0xFF)
 
 def store_word(address, value):
-    """Store a word (4 bytes) in memory."""
     store_byte(address, value & 0xFF)
     store_byte(address + 1, (value >> 8) & 0xFF)
     store_byte(address + 2, (value >> 16) & 0xFF)
     store_byte(address + 3, (value >> 24) & 0xFF)
 
 def load_byte(address):
-    """Load a single byte (8 bits) from memory."""
     if address not in memory:
         print(f"Warning: Loading from uninitialized memory address {address}. Returning 0.")
     return memory.get(address, 0)
 
 def load_halfword(address):
-    """Load a halfword (2 bytes) from memory and sign-extend."""
     byte1 = load_byte(address)
     byte2 = load_byte(address + 1)
     value = (byte2 << 8) | byte1
@@ -42,13 +37,11 @@ def load_halfword(address):
     return value
 
 def load_halfword_unsigned(address):
-    """Load a halfword (2 bytes) from memory and zero-extend."""
     byte1 = load_byte(address)
     byte2 = load_byte(address + 1)
     return (byte2 << 8) | byte1
 
 def load_word(address):
-    """Load a word (4 bytes) from memory."""
     byte1 = load_byte(address)
     byte2 = load_byte(address + 1)
     byte3 = load_byte(address + 2)
@@ -65,7 +58,6 @@ def sub(rd, rs1, rs2):
         registers[rd] = registers[rs1] - registers[rs2]
 
 def addi(rd, rs1, imm):
-    """Add immediate value to rs1 and store in rd."""
     if rd != 0:
         if rd is not None and imm is not None:
             registers[rd] = registers[rs1] + imm
@@ -93,21 +85,18 @@ def xori(rd, rs1, imm):
         print("Warning: Attempt to write to x0 ignored.")
 
 def slt(rd, rs1, rs2):
-    """Set Less Than."""
     if rd != 0:
         registers[rd] = 1 if registers[rs1] < registers[rs2] else 0
     else:
         print("Warning: Attempt to write to x0 ignored.")
 
 def slti(rd, rs1, imm):
-    """Set Less Than Immediate."""
     if rd != 0:
         registers[rd] = 1 if registers[rs1] < imm else 0
     else:
         print("Warning: Attempt to write to x0 ignored.")
 
 def sltiu(rd, rs1, imm):
-    """Set Less Than Immediate Unsigned."""
     if rd != 0:
         registers[rd] = 1 if (registers[rs1] & 0xFFFFFFFF) < (imm & 0xFFFFFFFF) else 0
     else:
@@ -132,57 +121,49 @@ def sra(rd, rs1, rs2):
         print("Warning: Attempt to write to x0 ignored.")
 
 def slli(rd, rs1, imm):
-    """Shift Left Logical Immediate."""
     if rd != 0:
         registers[rd] = registers[rs1] << (imm & 0x1F)
     else:
         print("Warning: Attempt to write to x0 ignored.")
 
 def srli(rd, rs1, imm):
-    """Shift Right Logical Immediate (zero-fill)."""
     if rd != 0:
         registers[rd] = (registers[rs1] & 0xFFFFFFFF) >> (imm & 0x1F)
     else:
         print("Warning: Attempt to write to x0 ignored.")
 
 def srai(rd, rs1, imm):
-    """Shift Right Arithmetic Immediate (sign-extend)."""
     if rd != 0:
         registers[rd] = registers[rs1] >> (imm & 0x1F)
     else:
         print("Warning: Attempt to write to x0 ignored.")
 
 def sltu(rd, rs1, rs2):
-    """Set Less Than Unsigned."""
     if rd != 0:
         registers[rd] = 1 if (registers[rs1] & 0xFFFFFFFF) < (registers[rs2] & 0xFFFFFFFF) else 0
     else:
         print("Warning: Attempt to write to x0 ignored.")
 
 def xor(rd, rs1, rs2):
-    """Bitwise XOR."""
     if rd != 0:
         registers[rd] = registers[rs1] ^ registers[rs2]
     else:
         print("Warning: Attempt to write to x0 ignored.")
 
 def or_(rd, rs1, rs2):
-    """Bitwise OR."""
     if rd != 0:
         registers[rd] = registers[rs1] | registers[rs2]
     else:
         print("Warning: Attempt to write to x0 ignored.")
 
 def and_(rd, rs1, rs2):
-    """Bitwise AND."""
     if rd != 0:
         registers[rd] = registers[rs1] & registers[rs2]
     else:
         print("Warning: Attempt to write to x0 ignored.")
 
-# Branch Instructions with Labels
+# Branch Instructions 
 def beq(rs1, rs2, target_label):
-    """Branch if Equal."""
     global program_counter
     if rs1 is None or rs2 is None:
         print(f"Error: BEQ instruction missing operands rs1={rs1}, rs2={rs2}")
@@ -201,7 +182,6 @@ def beq(rs1, rs2, target_label):
     return False
 
 def bne(rs1, rs2, target_label):
-    """Branch if Not Equal."""
     global program_counter
     if rs1 is None or rs2 is None:
         print(f"Error: BNE instruction missing operands rs1={rs1}, rs2={rs2}")
@@ -220,7 +200,6 @@ def bne(rs1, rs2, target_label):
     return False
 
 def blt(rs1, rs2, target_label):
-    """Branch if Less Than."""
     global program_counter
     if rs1 is None or rs2 is None:
         print(f"Error: BLT instruction missing operands rs1={rs1}, rs2={rs2}")
@@ -239,7 +218,6 @@ def blt(rs1, rs2, target_label):
     return False
 
 def bge(rs1, rs2, target_label):
-    """Branch if Greater Than or Equal."""
     global program_counter
     if rs1 is None or rs2 is None:
         print(f"Error: BGE instruction missing operands rs1={rs1}, rs2={rs2}")
@@ -258,7 +236,6 @@ def bge(rs1, rs2, target_label):
     return False
 
 def bltu(rs1, rs2, target_label):
-    """Branch if Less Than Unsigned."""
     global program_counter
     if rs1 is None or rs2 is None:
         print(f"Error: BLTU instruction missing operands rs1={rs1}, rs2={rs2}")
@@ -277,7 +254,6 @@ def bltu(rs1, rs2, target_label):
     return False
 
 def bgeu(rs1, rs2, target_label):
-    """Branch if Greater Than or Equal Unsigned."""
     global program_counter
     if rs1 is None or rs2 is None:
         print(f"Error: BGEU instruction missing operands rs1={rs1}, rs2={rs2}")
@@ -295,9 +271,8 @@ def bgeu(rs1, rs2, target_label):
         print(f"BGEU: Branch not taken, x{rs1}={registers[rs1]}, x{rs2}={registers[rs2]}")
     return False
 
-# Memory Instructions
+# Load and Store Instructions
 def lw(rd, offset, rs1):
-    """Load Word."""
     if rd == 0:
         print("Warning: Attempt to write to x0 ignored.")
         return
@@ -310,7 +285,6 @@ def lw(rd, offset, rs1):
     print(f"LW: Loaded word {registers[rd]} from address {address} into x{rd}")
 
 def lb(rd, offset, rs1):
-    """Load Byte."""
     if rd == 0:
         print("Warning: Attempt to write to x0 ignored.")
         return
@@ -326,7 +300,6 @@ def lb(rd, offset, rs1):
     print(f"LB: Loaded byte {registers[rd]} from address {address} into x{rd}")
 
 def lbu(rd, offset, rs1):
-    """Load Byte Unsigned."""
     if rd == 0:
         print("Warning: Attempt to write to x0 ignored.")
         return
@@ -339,7 +312,6 @@ def lbu(rd, offset, rs1):
     print(f"LBU: Loaded unsigned byte {registers[rd]} from address {address} into x{rd}")
 
 def lh(rd, offset, rs1):
-    """Load Halfword."""
     if rd == 0:
         print("Warning: Attempt to write to x0 ignored.")
         return
@@ -352,7 +324,6 @@ def lh(rd, offset, rs1):
     print(f"LH: Loaded halfword {registers[rd]} from address {address} into x{rd}")
 
 def lhu(rd, offset, rs1):
-    """Load Halfword Unsigned."""
     if rd == 0:
         print("Warning: Attempt to write to x0 ignored.")
         return
@@ -365,7 +336,6 @@ def lhu(rd, offset, rs1):
     print(f"LHU: Loaded unsigned halfword {registers[rd]} from address {address} into x{rd}")
 
 def sw(rs2, offset, rs1):
-    """Store Word."""
     if rs1 is None or rs2 is None or offset is None:
         print(f"Error: SW instruction missing operands rs2={rs2}, rs1={rs1}, offset={offset}")
         return
@@ -376,7 +346,6 @@ def sw(rs2, offset, rs1):
     print(f"SW: Stored value {value_to_store} from x{rs2} to memory address {address}")
 
 def sb(rs2, offset, rs1):
-    """Store Byte."""
     if rs1 is None or rs2 is None or offset is None:
         print(f"Error: SB instruction missing operands rs2={rs2}, rs1={rs1}, offset={offset}")
         return
@@ -387,7 +356,6 @@ def sb(rs2, offset, rs1):
     print(f"SB: Stored byte {value_to_store} from x{rs2} to memory address {address}")
 
 def sh(rs2, offset, rs1):
-    """Store Halfword."""
     if rs1 is None or rs2 is None or offset is None:
         print(f"Error: SH instruction missing operands rs2={rs2}, rs1={rs1}, offset={offset}")
         return
@@ -399,36 +367,28 @@ def sh(rs2, offset, rs1):
 
 # Jump and Link Instructions
 def jal(rd, target_label):
-    """Jump and Link."""
-    global program_counter
-    if rd is None or target_label is None:
-        print(f"Error: JAL instruction missing operands rd={rd}, label={target_label}")
-        return
-
-    if rd != 0:
-        registers[rd] = program_counter + 1
-
-    if isinstance(target_label, str):
-        if target_label in labels:
-            program_counter = labels[target_label]
-        else:
-            print(f"Error: Label '{target_label}' not found.")
-            return
-    elif isinstance(target_label, int):
-        program_counter = target_label
-
-    print(f"JAL: Jumped to label '{target_label}', return address stored in x{rd}")
-
-def jalr(rd, rs1, offset):
-    """Jump and Link Register."""
     global program_counter
     if rd != 0:
-        registers[rd] = program_counter + 1
-    target_address = (registers[rs1] + offset) & 0xFFFFFFFE  # Ensure least significant bit is zero
-    program_counter = target_address
-    print(f"JALR: Jumped to address {target_address}, return address stored in x{rd}")
+        registers[rd] = program_counter + 1  # Store return address
+    if target_label in labels:
+        program_counter = labels[target_label]  # Jump to label
+    else:
+        raise ValueError(f"Label '{target_label}' not found.")
 
-# Immediate Instructions
+
+
+
+
+def jalr(rd, rs1, offset=0):
+    global program_counter
+    if rd != 0:
+        registers[rd] = program_counter + 1  # Store return address
+    target_address = registers[rs1] + offset
+    program_counter = target_address  # Jump to target address
+
+
+
+#LUI and AUIPC Instructions
 def lui(rd, imm):
     if rd != 0:
         registers[rd] = imm << 12
@@ -441,7 +401,7 @@ def auipc(rd, imm):
     else:
         print("Warning: Attempt to write to x0 ignored.")
 
-# System Instructions
+# System Instructions which halt the program
 def ecall():
     print("ECALL - Halting")
     sys.exit(0)
@@ -469,7 +429,6 @@ def read_instructions_from_file(file_path):
         sys.exit(1)
 
 def parse_register(reg):
-    """Helper function to parse register names like x0, x1, etc."""
     reg = reg.strip()
     if reg.lower().startswith('x') and reg[1:].isdigit():
         reg_num = int(reg[1:])
@@ -479,7 +438,6 @@ def parse_register(reg):
     return None
 
 def parse_immediate(value):
-    """Helper function to parse immediate values."""
     try:
         return int(value, 0)
     except ValueError:
@@ -487,7 +445,6 @@ def parse_immediate(value):
         return None
 
 def instruction_splitting(line):
-    """Split an instruction line into its components."""
     line = line.strip()
     if '#' in line:
         line = line.split('#')[0].strip()
@@ -499,7 +456,6 @@ def instruction_splitting(line):
     opcode = parts[0].upper()
 
     # Handling Load and Store Instructions with Offset Notation
-      # Handling S-type and I-type instructions with offset notation
     if opcode in ['SW', 'SB', 'SH', 'LW', 'LH', 'LHU', 'LB', 'LBU']:
         if len(parts) != 3:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
@@ -539,7 +495,7 @@ def instruction_splitting(line):
             print(f"Error: JALR instruction missing operands. line='{line}'")
             return None, None, None, None, None, None
 
-    # I-type instructions (Immediate Arithmetic and Logical Instructions)
+    # Immediate Arithmetic and Logical Instructions
     elif opcode in ['ADDI', 'ANDI', 'ORI', 'XORI', 'SLTI', 'SLTIU',
                     'SLLI', 'SRLI', 'SRAI']:
         if len(parts) != 4:
@@ -550,7 +506,7 @@ def instruction_splitting(line):
         imm = parse_immediate(parts[3])
         return opcode, rd, rs1, None, imm, None
 
-    # R-type instructions (Register-Register Arithmetic and Logical Instructions)
+    # R-type instructions 
     elif opcode in ['ADD', 'SUB', 'SLT', 'SLTU', 'XOR', 'OR', 'AND',
                     'SLL', 'SRL', 'SRA']:
         if len(parts) != 4:
@@ -561,7 +517,7 @@ def instruction_splitting(line):
         rs2 = parse_register(parts[3])
         return opcode, rd, rs1, rs2, None, None
 
-    # B-type instructions (Branch Instructions)
+    # Branch Instructions
     elif opcode in ['BEQ', 'BNE', 'BLT', 'BGE', 'BLTU', 'BGEU']:
         if len(parts) != 4:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
@@ -571,7 +527,7 @@ def instruction_splitting(line):
         label = parts[3]
         return opcode, None, rs1, rs2, label, None
 
-    # U-type instructions (Upper Immediate Instructions)
+    # Upper Immediate Instructions
     elif opcode in ['LUI', 'AUIPC']:
         if len(parts) != 3:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
@@ -580,7 +536,7 @@ def instruction_splitting(line):
         imm = parse_immediate(parts[2])
         return opcode, rd, None, None, imm, None
 
-    # J-type instructions (Jump Instructions)
+    # Jump Instructions
     elif opcode == 'JAL':
         if len(parts) == 2:
             # Format: jal label
@@ -608,13 +564,11 @@ def instruction_splitting(line):
 
 
 def printRegisters(instruction=None):
-    """Prints the state of the program."""
     global program_counter
 
     if instruction:
         print(f"\n=== Executing Instruction ===\nInstruction: {instruction}\n")
 
-    # Adjust the program counter for display purposes
     current_pc = program_counter
     if instruction:
         current_pc -= 1
@@ -659,7 +613,6 @@ def printRegisters(instruction=None):
     else:
         print("\nNo labels found.\n")
 
-# User Input Function
 def user_input():
     global program_counter
     file_path = input("Enter the instruction file path: ").strip()
@@ -676,7 +629,7 @@ def user_input():
         load_memory_from_file(memory_file)
     return file_path
 
-# Function to load memory from a file
+# Function to load memory from a file (initalize memory)
 def load_memory_from_file(memory_file):
     global memory
     try:
@@ -702,7 +655,6 @@ def load_memory_from_file(memory_file):
         print(f"Error: Memory file '{memory_file}' not found.")
         sys.exit(1)
 
-# Main Function
 def main():
     global program_counter
     global labels
@@ -724,11 +676,12 @@ def main():
             label_name = line[:-1].strip()
             labels[label_name] = line_number
 
-    # Step 3: Execute instructions
+
+# Step 3: Execute instructions
     instruction_count = len(instruction_lines)
     while program_counter < instruction_count:
         line = instruction_lines[program_counter].strip()
-        original_line = line  # Keep the original line for printing
+        original_line = line  
 
         # Ignore comments and empty lines
         if '#' in line:
@@ -752,8 +705,9 @@ def main():
         if opcode in instructions:
             # Branch Instructions
             if opcode in ['BEQ', 'BNE', 'BLT', 'BGE', 'BLTU', 'BGEU']:
-                instructions[opcode](rs1, rs2, imm_or_label)
-                # Branch instructions modify the program_counter internally
+                branch_taken = instructions[opcode](rs1, rs2, imm_or_label)
+                if not branch_taken:
+                    program_counter += 1
             # Jump Instructions
             elif opcode == 'JAL':
                 instructions[opcode](rd, imm_or_label)
@@ -794,12 +748,12 @@ def main():
             print(f"Error: Unknown opcode '{opcode}'")
             program_counter += 1
 
-
         # Ensure x0 remains zero
         registers[0] = 0
 
         # Print the current state of registers after execution
         printRegisters(instruction=original_line)
+
 
 # Dictionary of instructions
 instructions = {

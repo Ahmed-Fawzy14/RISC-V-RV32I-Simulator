@@ -8,7 +8,7 @@ main:
 # Expected Outputs:
 # x1 = 0xFFFFFFFF (-1)
 # x2 = 1
-# x3 = 1   # -1 < 1 (signed)
+# x3 = 1   
 # x4 = 0   # 0xFFFFFFFF > 0x1 (unsigned)
 # x5 = 1   # -1 < 0 (signed immediate)
 # x6 = 0   # 0xFFFFFFFF > 0x0 (unsigned immediate)
