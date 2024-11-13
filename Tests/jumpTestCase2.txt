@@ -1,0 +1,22 @@
+# Test Case 4: Mixed Instructions with Labels and Branching
+ADDI x1, x0, 5           # x1 = 5
+ADDI x2, x0, 10          # x2 = 10
+JAL x3, jump_to_label    # Jump to "jump_to_label", x3 = address of next instruction
+ADDI x4, x0, 20          # This instruction should be skipped
+
+jump_to_label:
+SUB x5, x2, x1           # x5 = x2 - x1 -> x5 = 5
+BEQ x5, x1, equal_label  # If x5 == x1, jump to "equal_label"
+ADDI x6, x0, 30          # This instruction should be skipped if branch is taken
+JAL end                  # Unconditionally jump to "end"
+
+equal_label:
+ADDI x7, x0, 99          # x7 = 99
+
+end:
+ADDI x8, x0, 42          # x8 = 42 (this should always execute)
+
+# Expected Output:
+# Registers after execution:
+# x1 = 5, x2 = 10, x3 = address of skipped instruction, x5 = 5
+# x7 = 99 (if branch taken), x8 = 42

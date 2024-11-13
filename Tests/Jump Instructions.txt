@@ -1,0 +1,9 @@
+# Test Case 3: Jump Instructions
+ADDI x1, x0, 5       # x1 = 5
+JAL x2, target       # Jump to "target", x2 = program_counter + 4 (address of the next instruction)
+ADDI x3, x0, 10      # This instruction should be skipped due to the jump
+target:
+ADDI x4, x0, 99      # x4 = 99
+
+# Expected Output:
+# Registers: [0, 5, address of skipped instruction, 0, 99, ...]

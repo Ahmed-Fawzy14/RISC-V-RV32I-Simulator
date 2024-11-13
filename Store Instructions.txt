@@ -1,0 +1,11 @@
+# Test Case 4: Memory Instructions
+ADDI, 1, 0, 10      # x1 = 10
+SW, 1, 100          # store x1 at address 100
+LW, 2, 100          # load from address 100 into x2
+SB, 1, 101          # store byte x1 at address 101
+LB, 3, 101          # load byte from address 101 into x3
+LBU, 4, 101         # load byte unsigned from address 101 into x4
+
+# Expected Output:
+# Registers: [0, 10, 10, 10, 10, ...]
+# Memory: {100: 10, 101: 10}

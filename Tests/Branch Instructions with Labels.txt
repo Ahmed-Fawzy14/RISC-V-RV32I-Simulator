@@ -1,0 +1,11 @@
+# Test Case: Branch Instructions with Labels
+ADDI x1, x0, 10        # x1 = 10
+ADDI x2, x0, 20        # x2 = 20
+
+loop:
+BEQ x1, x2, end        # if x1 == x2, jump to "end"
+ADDI x1, x1, 1         # x1 += 1
+JAL x0, loop           # jump to "loop"
+
+end:
+ADDI x3, x0, 99        # x3 = 99 (only executed if branch succeeds)

@@ -1,0 +1,11 @@
+ADDI x3, x0, 1000  # Set x3 as a loop counter
+
+loop:
+    ADDI x1, x1, 1     # Increment x1
+    BEQ x1, x2, end    # If x1 == x2, jump to "end"
+    ADDI x3, x3, -1    # Decrement counter
+    BEQ x3, x0, end    # Exit if counter reaches 0
+    JAL x0, loop       # Jump back to "loop"
+
+end:
+    # Program ends here

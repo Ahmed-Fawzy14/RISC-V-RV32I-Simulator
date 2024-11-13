@@ -1,8 +1,0 @@
-ADDI,1,2,5,,start        # Adds 5 to register 2, stores in register 1; label this line as "start"
-BEQ,1,2,loop             # If registers 1 and 2 are equal, jump to label "loop"
-SUB,3,1,2                # Subtracts register 2 from register 1, stores result in register 3
-BNE,3,0,end              # If register 3 is not zero, jump to label "end"
-loop:                    # Label "loop" is defined here
-ANDI,4,1,15              # Performs bitwise AND with register 1 and immediate value 15, stores in register 4
-end:                     # Label "end" is defined here
-ORI,5,4,8                # Performs bitwise OR with register 4 and immediate value 8, stores in register 5
