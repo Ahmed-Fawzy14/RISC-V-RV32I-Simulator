@@ -498,8 +498,7 @@ def instruction_splitting(line):
     parts = line.replace(',', ' ').split()
     opcode = parts[0].upper()
 
-    # Handling Load and Store Instructions with Offset Notation
-      # Handling S-type and I-type instructions with offset notation
+    # Handling S-type and I-type instructions with offset notation
     if opcode in ['SW', 'SB', 'SH', 'LW', 'LH', 'LHU', 'LB', 'LBU']:
         if len(parts) != 3:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
@@ -517,31 +516,8 @@ def instruction_splitting(line):
         else:
             return opcode, reg1, reg2, None, offset, None  # rd, rs1, offset
 
-
-    # Handling JALR Instruction
-    elif opcode == 'JALR':
-        if len(parts) == 2:
-            # Format: jalr rd
-            rd = parse_register(parts[1])
-            return opcode, rd, None, None, 0, None
-        elif len(parts) == 3:
-            # Format: jalr rd, rs1
-            rd = parse_register(parts[1])
-            rs1 = parse_register(parts[2])
-            return opcode, rd, rs1, None, 0, None
-        elif len(parts) == 4:
-            # Format: jalr rd, rs1, imm
-            rd = parse_register(parts[1])
-            rs1 = parse_register(parts[2])
-            imm = parse_immediate(parts[3])
-            return opcode, rd, rs1, None, imm, None
-        else:
-            print(f"Error: JALR instruction missing operands. line='{line}'")
-            return None, None, None, None, None, None
-
-    # I-type instructions (Immediate Arithmetic and Logical Instructions)
-    elif opcode in ['ADDI', 'ANDI', 'ORI', 'XORI', 'SLTI', 'SLTIU',
-                    'SLLI', 'SRLI', 'SRAI']:
+    # I-type instructions
+    elif opcode in ['ADDI', 'ANDI', 'ORI', 'XORI', 'SLTI', 'SLTIU', 'JALR']:
         if len(parts) != 4:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
             return None, None, None, None, None, None
@@ -550,9 +526,8 @@ def instruction_splitting(line):
         imm = parse_immediate(parts[3])
         return opcode, rd, rs1, None, imm, None
 
-    # R-type instructions (Register-Register Arithmetic and Logical Instructions)
-    elif opcode in ['ADD', 'SUB', 'SLT', 'SLTU', 'XOR', 'OR', 'AND',
-                    'SLL', 'SRL', 'SRA']:
+    # R-type instructions
+    elif opcode in ['ADD', 'SUB', 'SLT', 'SLTU', 'XOR', 'OR', 'AND', 'SLL', 'SRL', 'SRA']:
         if len(parts) != 4:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
             return None, None, None, None, None, None
@@ -561,7 +536,7 @@ def instruction_splitting(line):
         rs2 = parse_register(parts[3])
         return opcode, rd, rs1, rs2, None, None
 
-    # B-type instructions (Branch Instructions)
+    # B-type instructions
     elif opcode in ['BEQ', 'BNE', 'BLT', 'BGE', 'BLTU', 'BGEU']:
         if len(parts) != 4:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
@@ -571,7 +546,7 @@ def instruction_splitting(line):
         label = parts[3]
         return opcode, None, rs1, rs2, label, None
 
-    # U-type instructions (Upper Immediate Instructions)
+    # U-type instructions
     elif opcode in ['LUI', 'AUIPC']:
         if len(parts) != 3:
             print(f"Error: {opcode} instruction missing operands. line='{line}'")
@@ -580,32 +555,21 @@ def instruction_splitting(line):
         imm = parse_immediate(parts[2])
         return opcode, rd, None, None, imm, None
 
-    # J-type instructions (Jump Instructions)
+    # J-type instructions
     elif opcode == 'JAL':
-        if len(parts) == 2:
-            # Format: jal label
-            rd = 1  # Default return register x1
-            label = parts[1]
-            return opcode, rd, None, None, label, None
-        elif len(parts) == 3:
-            # Format: jal rd, label
-            rd = parse_register(parts[1])
-            label = parts[2]
-            return opcode, rd, None, None, label, None
-        else:
-            print(f"Error: JAL instruction missing operands. line='{line}'")
+        if len(parts) != 3:
+            print(f"Error: {opcode} instruction missing operands. line='{line}'")
             return None, None, None, None, None, None
+        rd = parse_register(parts[1])
+        label = parts[2]
+        return opcode, rd, None, None, label, None
 
-    # System instructions (ECALL, EBREAK, FENCE, FENCE.TSO, PAUSE)
+    # System instructions
     elif opcode in ['ECALL', 'EBREAK', 'FENCE', 'FENCE.TSO', 'PAUSE']:
         return opcode, None, None, None, None, None
 
-    else:
-        print(f"Error: Unrecognized instruction format. line='{line}'")
-        return None, None, None, None, None, None
-
-
-
+    print(f"Error: Unrecognized instruction format. line='{line}'")
+    return None, None, None, None, None, None
 
 def printRegisters(instruction=None):
     """Prints the state of the program."""
@@ -750,50 +714,40 @@ def main():
 
         # Execute the instruction based on its type
         if opcode in instructions:
-            # Branch Instructions
-            if opcode in ['BEQ', 'BNE', 'BLT', 'BGE', 'BLTU', 'BGEU']:
-                instructions[opcode](rs1, rs2, imm_or_label)
-                # Branch instructions modify the program_counter internally
-            # Jump Instructions
-            elif opcode == 'JAL':
+            if opcode in ['BEQ', 'BNE', 'BGE', 'BLT', 'BLTU', 'BGEU']:
+                branch_taken = instructions[opcode](rs1, rs2, imm_or_label)
+                if branch_taken:
+                    continue  # Branch taken; program_counter updated within the branch function
+                else:
+                    program_counter += 1  # Branch not taken; proceed to next instruction
+            elif opcode in ['JAL']:
                 instructions[opcode](rd, imm_or_label)
-                # JAL modifies the program_counter internally
-            elif opcode == 'JALR':
+                # Do not increment program_counter; it's updated within the instruction
+            elif opcode in ['JALR']:
                 instructions[opcode](rd, rs1, imm_or_label)
-                # JALR modifies the program_counter internally
-            # Immediate Arithmetic and Shift Instructions
-            elif opcode in ['ADDI', 'ANDI', 'ORI', 'XORI', 'SLTI', 'SLTIU',
-                            'SLLI', 'SRLI', 'SRAI']:
+                # Do not increment program_counter; it's updated within the instruction
+            elif opcode in ['ADDI', 'ANDI', 'ORI', 'XORI', 'SLTI', 'SLTIU']:
                 instructions[opcode](rd, rs1, imm_or_label)
                 program_counter += 1
-            # Register-Register Arithmetic and Logical Instructions
-            elif opcode in ['ADD', 'SUB', 'SLT', 'SLTU', 'XOR', 'OR', 'AND',
-                            'SLL', 'SRL', 'SRA']:
-                instructions[opcode](rd, rs1, rs2)
-                program_counter += 1
-            # Load Instructions
-            elif opcode in ['LW', 'LH', 'LHU', 'LB', 'LBU']:
+            elif opcode in ['LW', 'LB', 'LBU', 'LH', 'LHU']:
                 instructions[opcode](rd, imm_or_label, rs1)
                 program_counter += 1
-            # Store Instructions
-            elif opcode in ['SW', 'SH', 'SB']:
+            elif opcode in ['SW', 'SB', 'SH']:
                 instructions[opcode](rs2, imm_or_label, rs1)
                 program_counter += 1
-            # Upper Immediate Instructions
             elif opcode in ['LUI', 'AUIPC']:
                 instructions[opcode](rd, imm_or_label)
                 program_counter += 1
-            # System Instructions
             elif opcode in ['ECALL', 'EBREAK', 'FENCE', 'FENCE.TSO', 'PAUSE']:
                 instructions[opcode]()
                 program_counter += 1
             else:
-                print(f"Error: Unhandled opcode '{opcode}'")
+                instructions[opcode](rd, rs1, rs2)
                 program_counter += 1
         else:
             print(f"Error: Unknown opcode '{opcode}'")
             program_counter += 1
-
+            continue
 
         # Ensure x0 remains zero
         registers[0] = 0

@@ -1,0 +1,22 @@
+ADDI x1, x2, 10        # x1 = x2 + 10
+ADDI x3, x4, 20        # x3 = x4 + 20
+
+BNE x1, x3, bne_branch # Branch to 'bne_branch' if x1 != x3
+ADDI x1, x3, 1000      # This should not execute if x1 != x3
+bne_branch:
+
+BGE x3, x1, bge_branch # Branch to 'bge_branch' if x3 >= x1
+ADDI x1, x3, 1000      # This should not execute if x3 >= x1
+bge_branch:
+
+ADDI x5, x0, -5        # x5 = -5
+BLTU x5, x3, bltu_unsigned  # Branch if x5 < x3 (unsigned comparison)
+ADDI x1, x0, -99
+
+BGEU x1, x3, bgeu_unsigned  # Branch if x1 >= x3 (unsigned comparison)
+bltu_unsigned:
+
+ADDI x1, x3, 1000      # Should not execute
+bgeu_unsigned:
+
+ADDI x4, x0, 100       # x4 = 100
