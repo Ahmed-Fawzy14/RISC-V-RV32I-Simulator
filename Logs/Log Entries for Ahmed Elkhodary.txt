@@ -18,3 +18,7 @@ November 3, 2024:
 
 File Creation:
 - Created `rv32i_instructions.txt` to provide test data for the emulator, containing instructions formatted with commas.
+
+
+November 13:
+- Created and wrote the entire Project report from scratch. 
